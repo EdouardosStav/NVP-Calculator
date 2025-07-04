@@ -33,6 +33,12 @@ const App: React.FC = () => {
     }
   };
 
+  const handleClear = () => {
+    setResults([]);
+    setError(null);
+    setIsLoading(false);
+  };
+
   return (
     <div className="App">
       <div className="container">
@@ -43,7 +49,11 @@ const App: React.FC = () => {
         
         <div className="main-content">
           <div className="input-section">
-            <NpvForm onSubmit={handleCalculate} isLoading={isLoading} />
+            <NpvForm 
+              onSubmit={handleCalculate} 
+              onClear={handleClear}
+              isLoading={isLoading} 
+            />
             
             {error && (
               <div className="error-message">
@@ -69,6 +79,7 @@ const App: React.FC = () => {
                   <li>Set your discount rate range</li>
                   <li>Choose the increment step</li>
                   <li>Click "Calculate NPV" to see results</li>
+                  <li>Use "Clear All" to reset and start over</li>
                 </ul>
               </div>
             )}

@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { NpvCalculationRequest } from '../types';
 
 interface NpvFormProps {
   onSubmit: (request: NpvCalculationRequest) => void;
+  onClear: () => void;
   isLoading: boolean;
 }
 
-const NpvForm: React.FC<NpvFormProps> = ({ onSubmit, isLoading }) => {
-  const [cashFlowsInput, setCashFlowsInput] = useState('-1000, 300, 400, 500');
-  const [lowerBoundRate, setLowerBoundRate] = useState(1.0);
-  const [upperBoundRate, setUpperBoundRate] = useState(15.0);
-  const [rateIncrement, setRateIncrement] = useState(0.25);
+// Default values moved outside component for better performance
+const DEFAULT_VALUES = {
+  cashFlowsInput: '-1000, 300, 400, 500',
+  lowerBoundRate: 1.0,
+  upperBoundRate: 15.0,
+  rateIncrement: 0.25,
+};
+
+const NpvForm: React.FC<NpvFormProps> = ({ onSubmit, onClear, isLoading }) => {
+  const [cashFlowsInput, setCashFlowsInput] = useState(DEFAULT_VALUES.cashFlowsInput);
+  const [lowerBoundRate, setLowerBoundRate] = useState(DEFAULT_VALUES.lowerBoundRate);
+  const [upperBoundRate, setUpperBoundRate] = useState(DEFAULT_VALUES.upperBoundRate);
+  const [rateIncrement, setRateIncrement] = useState(DEFAULT_VALUES.rateIncrement);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +41,29 @@ const NpvForm: React.FC<NpvFormProps> = ({ onSubmit, isLoading }) => {
       rateIncrement,
     });
   };
+
+  const handleClear = useCallback(() => {
+    setCashFlowsInput(DEFAULT_VALUES.cashFlowsInput);
+    setLowerBoundRate(DEFAULT_VALUES.lowerBoundRate);
+    setUpperBoundRate(DEFAULT_VALUES.upperBoundRate);
+    setRateIncrement(DEFAULT_VALUES.rateIncrement);
+    onClear(); // Clear results in parent component
+  }, [onClear]);
+
+  // Keyboard shortcut for clear (Ctrl+R / Cmd+R)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+        event.preventDefault();
+        handleClear();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleClear]);
 
   return (
     <form onSubmit={handleSubmit} className="npv-form">
@@ -90,6 +122,16 @@ const NpvForm: React.FC<NpvFormProps> = ({ onSubmit, isLoading }) => {
 
       <button type="submit" disabled={isLoading}>
         {isLoading ? 'Calculating...' : 'Calculate NPV'}
+      </button>
+      
+      <button 
+        type="button" 
+        onClick={handleClear} 
+        disabled={isLoading}
+        className="clear-btn"
+        title="Clear all fields and results"
+      >
+        Clear All
       </button>
     </form>
   );
